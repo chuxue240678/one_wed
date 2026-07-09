@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书管理系统</title>
+    <style>
+        /* 样式与你原代码完全一致，此处省略重复CSS，直接复用原有样式即可 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: "Microsoft Yahei", sans-serif;
+            color: #333;
+        }
+
+        .layout-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .header {
+            height: 60px;
+            background-color: #2c3e50;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            flex-shrink: 0;
+        }
+
+        .header-logo {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+        }
+
+        .main-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 220px;
+            background-color: #34495e;
+            color: #fff;
+            flex-shrink: 0;
+            padding-top: 12px;
+        }
+
+        .menu-item {
+            padding: 14px 24px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover {
+            background-color: #3d566e;
+        }
+
+        .menu-item.active {
+            background-color: #3498db;
+        }
+
+        .main-content {
+            flex: 1;
+            background-color: #f5f7fa;
+            padding: 20px 24px;
+            overflow-y: auto;
+        }
+
+        .breadcrumb {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .content-panel {
+            display: none;
+        }
+
+        .content-panel.active {
+            display: block;
+        }
+
+        .content-card {
+            background: #fff;
+            border-radius: 4px;
+            padding: 20px;
+            min-height: 300px;
+        }
+
+        .action-bar {
+            background: #fff;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-add {
+            padding: 6px 16px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .search-input {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 240px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background-color: #fafafa;
+            font-weight: 500;
+        }
+
+        .stat-card-group {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 4px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-card .label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .stat-card .num {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .stat-card.blue .num {
+            color: #3498db;
+        }
+
+        .stat-card.green .num {
+            color: #27ae60;
+        }
+
+        .stat-card.orange .num {
+            color: #e67e22;
+        }
+
+        .stat-card.red .num {
+            color: #e74c3c;
+        }
+
+        .home-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .home-col {
+            flex: 1;
+            background: #fff;
+            border-radius: 4px;
+            padding: 20px;
+        }
+
+        .home-col h4 {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .rank-list li {
+            list-style: none;
+            padding: 8px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .footer {
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            background-color: #fff;
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .pagination .page-btn {
+            padding: 4px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #fff;
+            user-select: none;
+        }
+
+        .pagination .page-btn:hover:not(.disabled):not(.active) {
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .pagination .page-btn.active {
+            background: #3498db;
+            color: #fff;
+            border-color: #3498db;
+        }
+
+        .pagination .page-btn.disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            border-color: #eee;
+        }
+
+        .pagination .page-total {
+            margin-right: 12px;
+        }
+
+        .status-borrow {
+            color: #e67e22;
+            font-weight: 500;
+        }
+
+        .status-return {
+            color: #27ae60;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<div class="layout-container">
+    <header class="header">
+        <div class="header-logo">图书管理系统</div>
+        <div class="header-user">
+            <span>管理员</span>
+            <span style="cursor: pointer;">退出登录</span>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <aside class="sidebar">
+            <div class="menu-item active" data-target="#panel-home">首页概览</div>
+            <div class="menu-item" data-target="#panel-book">图书管理</div>
+            <div class="menu-item" data-target="#panel-reader">读者管理</div>
+            <div class="menu-item" data-target="#panel-borrow">借阅管理</div>
+            <div class="menu-item" data-target="#panel-set">系统设置</div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb" id="breadcrumb">首页 / 首页概览</div>
+
+            <!-- 面板1：首页概览 -->
+            <div class="content-panel active" id="panel-home">
+                <div class="stat-card-group">
+                    <div class="stat-card blue">
+                        <span class="label">馆藏图书总数</span>
+                        <span class="num" id="total-book">0</span>
+                    </div>
+                    <div class="stat-card green">
+                        <span class="label">注册读者人数</span>
+                        <span class="num" id="total-reader">0</span>
+                    </div>
+                    <div class="stat-card orange">
+                        <span class="label">今日借阅次数</span>
+                        <span class="num" id="today-borrow">0</span>
+                    </div>
+                    <div class="stat-card red">
+                        <span class="label">待归还图书</span>
+                        <span class="num" id="unreturned">0</span>
+                    </div>
+                </div>
+
+                <div class="home-row">
+                    <div class="home-col">
+                        <h4>本月借阅趋势</h4>
+                        <p style="color: #999; font-size: 13px; padding: 40px 0; text-align: center;">
+                            可接入折线图展示每日借阅数据
+                        </p>
+                    </div>
+                    <div class="home-col">
+                        <h4>图书借阅排行 TOP5</h4>
+                        <ul class="rank-list" id="rank-list">
+                            <!-- 动态渲染 -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 面板2：图书管理 -->
+            <div class="content-panel" id="panel-book">
+                <div class="action-bar">
+                    <input type="text" class="search-input" id="book-search" placeholder="请输入书名/ISBN搜索">
+                    <button class="btn-add" onclick="window.location.href='/books/add'">新增图书</button>
+                </div>
+                <div class="content-card">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>图书编号</th>
+                            <th>书名</th>
+                            <th>作者</th>
+                            <th>分类</th>
+                            <th>库存</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="book-tbody">
+                        <!-- 动态渲染 -->
+                        </tbody>
+                    </table>
+                    <!-- 分页组件 -->
+                    <div class="pagination" id="book-pagination"></div>
+                </div>
+            </div>
+
+            <!-- 面板3：读者管理 -->
+            <div class="content-panel" id="panel-reader">
+                <div class="action-bar">
+                    <input type="text" class="search-input" id="reader-search" placeholder="请输入读者姓名/学号搜索">
+                    <button class="btn-add" onclick="window.location.href='/reader/add'">新增读者</button>
+                </div>
+                <div class="content-card">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>读者编号</th>
+                            <th>姓名</th>
+                            <th>学号/工号</th>
+                            <th>手机号</th>
+                            <th>可借数量</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="reader-tbody">
+                        <!-- 动态渲染 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 面板4 借阅管理面板 -->
+            <div class="content-panel" id="panel-borrow">
+                <div class="content-card">
+                    <div class="action-bar">
+                        <div>
+                            <button class="btn-add" onclick="window.location.href='/borrow/add'">图书借出</button>
+                            <button class="btn-add" style="background:#27ae60; margin-left: 8px;"
+                                    onclick="window.location.href='/borrow/return'">图书归还
+                            </button>
+                        </div>
+                        <input type="text" class="search-input" id="borrow-search" placeholder="搜索借阅单号/书名/学号">
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>借阅单号</th>
+                            <th>图书名称</th>
+                            <th>读者学号</th>
+                            <th>借出日期</th>
+                            <th>应还日期</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="borrow-tbody">
+                        <tr>
+                            <td colspan="7" style="text-align:center; color:#999; padding:40px 0;">加载中...</td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- 分页组件 -->
+                    <div class="pagination" id="borrow-pagination"></div>
+                </div>
+            </div>
+            <!-- 面板5：系统设置 -->
+            <div class="content-panel" id="panel-set">
+                <div class="content-card">
+                    <h3 style="margin-bottom: 20px;">系统设置</h3>
+                    <p style="padding: 8px 0;">• 账号管理：管理员账号新增、权限分配</p>
+                    <p style="padding: 8px 0;">• 借阅规则：借阅时长、可借数量配置</p>
+                    <p style="padding: 8px 0;">• 图书分类：分类字典维护</p>
+                    <p style="padding: 8px 0;">• 系统日志：操作日志、登录日志查询</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="footer">
+        图书管理系统 V1.0 © 2026 版权所有
+    </footer>
+</div>
+
+<script>
+    // 后端接口基础地址
+    const BASE_URL = "http://127.0.0.1:5000/api";
+
+    // 侧边栏菜单切换面板
+    document.querySelectorAll('.menu-item[data-target]').forEach(item => {
+        item.addEventListener('click', function () {
+            // 1. 移除所有菜单的选中状态
+            document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+            // 2. 当前菜单高亮
+            this.classList.add('active');
+
+            // 3. 隐藏所有面板（移除 active 类）
+            document.querySelectorAll('.content-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+
+            // 4. 显示目标面板（添加 active 类）
+            const targetId = this.getAttribute('data-target');
+            const targetPanel = document.querySelector(targetId);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+
+            // 5. 同步更新面包屑
+            const menuText = this.innerText;
+            document.getElementById('breadcrumb').innerText = `首页 / ${menuText}`;
+
+            // 6. 切换到对应面板时加载数据
+            if (targetId === '#panel-home') {
+                loadHomeStats();
+            }
+            if (targetId === '#panel-book') {
+                loadBookList();
+            }
+            if (targetId === '#panel-reader') {
+                loadReaderList();
+            }
+            if (targetId === '#panel-borrow') {
+                loadBorrowList();
+            }
+        });
+    });
+
+    // ========== 2. 首页统计数据加载 ==========
+    async function loadHomeStats() {
+        try {
+            const res = await fetch(`${BASE_URL}/home/stats`);
+            const result = await res.json();
+            if (result.code === 200) {
+                const data = result.data;
+                // 渲染四个统计卡片
+                document.getElementById('total-book').innerText = data.total_book;
+                document.getElementById('total-reader').innerText = data.total_reader;
+                document.getElementById('today-borrow').innerText = data.today_borrow;
+                document.getElementById('unreturned').innerText = data.unreturned;
+
+                // 渲染借阅排行
+                const rankList = document.getElementById('rank-list');
+                rankList.innerHTML = data.borrow_rank.map((item, index) => `
+                        <li>
+                            <span>${index + 1}. ${item.book_name}</span>
+                            <span>${item.borrow_count}次</span>
+                        </li>
+                    `).join('');
+            }
+        } catch (e) {
+            console.error("首页数据加载失败：", e);
+        }
+    }
+
+    // 全局保存当前搜索条件和页码
+    let currentBookKeyword = '';
+    let currentBookPage = 1;
+
+    // ========== 3. 图书列表加载 + 搜索 + 分页 ==========
+    async function loadBookList(keyword = '', page = 1) {
+        currentBookKeyword = keyword;
+        currentBookPage = page;
+        try {
+            const res = await fetch(`${BASE_URL}/books/list?keyword=${keyword}&page=${page}&page_size=10`);
+            const result = await res.json();
+            if (result.code === 200) {
+                const tbody = document.getElementById('book-tbody');
+                const data = result.data;
+                const list = data.list;
+
+                if (list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999; padding:40px 0;">暂无图书数据</td></tr>';
+                } else {
+                    tbody.innerHTML = list.map(book => `
+                    <tr>
+                        <td>${book.book_no}</td>
+                        <td>${book.book_name}</td>
+                        <td>${book.author || '-'}</td>
+                        <td>${book.category || '-'}</td>
+                        <td>${book.stock}</td>
+                        <td>
+                            <span style="color:#999; margin-right:12px;">编辑</span>
+                            <span style="color:#e74c3c; cursor:pointer;" onclick="deleteBook(${book.id})">删除</span>
+                        </td>
+                    </tr>
+                `).join('');
+                }
+
+                // 渲染分页栏
+                renderBookPagination(data);
+            }
+        } catch (e) {
+            console.error("图书列表加载失败：", e);
+        }
+    }
+
+    // 渲染分页组件
+    function renderBookPagination(data) {
+        const pagination = document.getElementById('book-pagination');
+        const {total, page, total_pages} = data;
+
+        if (total_pages <= 1) {
+            pagination.innerHTML = `<span class="page-total">共 ${total} 条</span>`;
+            return;
+        }
+
+        let html = `<span class="page-total">共 ${total} 条</span>`;
+
+        // 上一页
+        if (page === 1) {
+            html += `<span class="page-btn disabled">上一页</span>`;
+        } else {
+            html += `<span class="page-btn" onclick="loadBookList(currentBookKeyword, ${page - 1})">上一页</span>`;
+        }
+
+        // 页码按钮
+        for (let i = 1; i <= total_pages; i++) {
+            if (i === page) {
+                html += `<span class="page-btn active">${i}</span>`;
+            } else {
+                html += `<span class="page-btn" onclick="loadBookList(currentBookKeyword, ${i})">${i}</span>`;
+            }
+        }
+
+        // 下一页
+        if (page === total_pages) {
+            html += `<span class="page-btn disabled">下一页</span>`;
+        } else {
+            html += `<span class="page-btn" onclick="loadBookList(currentBookKeyword, ${page + 1})">下一页</span>`;
+        }
+
+        pagination.innerHTML = html;
+    }
+
+    // 删除图书
+    async function deleteBook(id) {
+        if (!confirm('确定要删除这本图书吗？删除后不可恢复。')) {
+            return;
+        }
+        try {
+            const res = await fetch(`${BASE_URL}/books/delete`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: id})
+            });
+            const result = await res.json();
+            if (result.code === 200) {
+                alert('删除成功');
+                loadBookList(); // 删除后自动刷新列表
+            } else {
+                alert(result.msg || '删除失败');
+            }
+        } catch (e) {
+            console.error("删除图书失败：", e);
+            alert('网络异常，删除失败');
+        }
+    }
+
+    document.getElementById('book-search').addEventListener('keyup', function (e) {
+        if (e.key === 'Enter') {
+            loadBookList(this.value, 1);
+        }
+    });
+
+    // ========== 4. 读者列表加载 + 搜索 ==========
+    async function loadReaderList(keyword = '') {
+        try {
+            const res = await fetch(`${BASE_URL}/readers/list?keyword=${keyword}`);
+            const result = await res.json();
+            if (result.code === 200) {
+                const tbody = document.getElementById('reader-tbody');
+                tbody.innerHTML = result.data.map(reader => `
+                    <tr>
+                        <td>${reader.reader_no}</td>
+                        <td>${reader.name}</td>
+                        <td>${reader.student_no || '-'}</td>
+                        <td>${reader.phone || '-'}</td>
+                        <td>编辑 / 删除</td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            console.error("读者列表加载失败：", e);
+        }
+    }
+
+    document.getElementById('reader-search').addEventListener('keyup', function (e) {
+        if (e.key === 'Enter') {
+            loadReaderList(this.value);
+        }
+    });
+
+    // 全局变量：借阅列表搜索条件与页码
+    let currentBorrowKeyword = '';
+    let currentBorrowPage = 1;
+
+    // 加载借阅列表
+    async function loadBorrowList(keyword = '', page = 1) {
+        currentBorrowKeyword = keyword;
+        currentBorrowPage = page;
+        try {
+            const res = await fetch(`${BASE_URL}/borrow/list?keyword=${keyword}&page=${page}&page_size=10`);
+            const result = await res.json();
+            const tbody = document.getElementById('borrow-tbody');
+
+            if (result.code !== 200) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#e74c3c; padding:40px 0;">加载失败</td></tr>';
+                return;
+            }
+
+            const data = result.data;
+            const list = data.list;
+
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#999; padding:40px 0;">暂无借阅记录</td></tr>';
+            } else {
+                tbody.innerHTML = list.map(item => {
+                    // 状态映射：1=借阅中(橙色)，2=已归还(绿色)
+                    let statusText = '';
+                    let statusClass = '';
+                    if (item.status === 1) {
+                        statusText = '借阅中';
+                        statusClass = 'status-borrow';
+                    } else if (item.status === 2) {
+                        statusText = '已归还';
+                        statusClass = 'status-return';
+                    } else {
+                        statusText = '未知';
+                        statusClass = '';
+                    }
+
+                    return `
+                    <tr>
+                        <td>${item.borrow_no}</td>
+                        <td>${item.book_name || '-'}</td>
+                        <td>${item.student_no || '-'}</td>
+                        <td>${item.borrow_date}</td>
+                        <td>${item.due_date}</td>
+                        <td class="${statusClass}">${statusText}</td>
+                        <td>
+                            ${item.status === 1
+                        ? `<span style="color:#27ae60; cursor:pointer;" onclick="window.location.href='/borrow/return?no=${item.borrow_no}'">归还</span>`
+                        : `<span style="color:#999;">已完成</span>`
+                    }
+                        </td>
+                    </tr>
+                `;
+                }).join('');
+            }
+
+            // 渲染分页
+            renderBorrowPagination(data);
+        } catch (e) {
+            console.error("借阅列表加载失败：", e);
+        }
+    }
+
+    // 借阅分页渲染
+    function renderBorrowPagination(data) {
+        const pagination = document.getElementById('borrow-pagination');
+        const {total, page, total_pages} = data;
+
+        if (total_pages <= 1) {
+            pagination.innerHTML = `<span class="page-total">共 ${total} 条</span>`;
+            return;
+        }
+
+        let html = `<span class="page-total">共 ${total} 条</span>`;
+
+        if (page === 1) {
+            html += `<span class="page-btn disabled">上一页</span>`;
+        } else {
+            html += `<span class="page-btn" onclick="loadBorrowList(currentBorrowKeyword, ${page - 1})">上一页</span>`;
+        }
+
+        for (let i = 1; i <= total_pages; i++) {
+            html += i === page
+                ? `<span class="page-btn active">${i}</span>`
+                : `<span class="page-btn" onclick="loadBorrowList(currentBorrowKeyword, ${i})">${i}</span>`;
+        }
+
+        if (page === total_pages) {
+            html += `<span class="page-btn disabled">下一页</span>`;
+        } else {
+            html += `<span class="page-btn" onclick="loadBorrowList(currentBorrowKeyword, ${page + 1})">下一页</span>`;
+        }
+
+        pagination.innerHTML = html;
+    }
+
+    // 搜索回车事件
+    document.getElementById('borrow-search').addEventListener('keyup', function (e) {
+        if (e.key === 'Enter') {
+            loadBorrowList(this.value, 1);
+        }
+    });
+    // 页面初始化：加载首页数据
+    window.onload = function () {
+        loadHomeStats();
+    };
+</script>
+</body>
+</html>
